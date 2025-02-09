@@ -1,25 +1,20 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common'
+import { Controller, Get, Query, ParseIntPipe } from '@nestjs/common'
 import { MoviesService } from 'src/movies/services/movies/movies.service'
 
-@Controller('movies')
+@Controller('movie')
 export class MoviesController {
-  constructor(private readonly moviesService: MoviesService) {}
+  constructor(
+    private readonly moviesService: MoviesService,
+  ) {}
 
   @Get()
-  getAllMovies() {
-    const movies = this.moviesService.getMovies()
-    console.log('movie controller')
-    return movies
+  getAllMovies(@Query('page', ParseIntPipe) page: number) {
+    return this.moviesService.getMovies(page)
   }
 
-  @Get(':id/countries')
-  getCountriesByMovie(@Param('id', ParseIntPipe) id: number) {
-    return this.moviesService.getCountriesByMovie(id)
+  @Get('search')
+  getSearchResults(@Query('q') q: string) {
+    return this.moviesService.getSearchResults(q)
   }
 
-  @Get('countries')
-  getMovieCountries() {
-    return this.moviesService.getMovieCountries()
-  }
 }
-

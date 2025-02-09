@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { MoviesModule } from './movies/movies.module'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { ElasticsearchModule } from './elasticsearch/elasticsearch.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AppService } from './app.service'
       migrationsRun: false,
     }),
     MoviesModule,
+    ElasticsearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],
