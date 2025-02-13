@@ -50,13 +50,12 @@ model MovieCountry {
 }
 
 model Cast {
-  id         Int           @id @default(autoincrement())
-  name       String        @unique
-  avatar     String?
-  bio        String
-  inMovies   MovieCast[]
-  inEpisodes CastEpisode[]
-  photos     PhotoCast[]
+  id       Int         @id @default(autoincrement())
+  name     String      @unique
+  avatar   String?
+  bio      String
+  src      String
+  inMovies MovieCast[]
 
   @@map("casts")
 }
@@ -67,6 +66,7 @@ model MovieCast {
   movie            Movie   @relation(fields: [movieId], references: [id])
   castId           Int
   cast             Cast    @relation(fields: [castId], references: [id])
+  role             String
   relatedCastImage String?
 
   @@map("movie_cast")
@@ -98,7 +98,7 @@ model Movie {
   countries   MovieCountry[]
   casts       MovieCast[]
   productions MovieProduction[]
-  page_url    String
+  src    String
   watch_links WatchLink[]
   duration    String
   poster      String?
@@ -107,7 +107,6 @@ model Movie {
   imdbRating  String?
   seasons     Int?
   episodes    Episode[]
-  videos      Video[]
 
   @@map("movies")
 }
@@ -123,32 +122,20 @@ model WatchLink {
 }
 
 model Episode {
-  id          Int           @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   number      Int
   season      Int
   name        String
-  description String        @db.Text
+  description String  @db.Text
   thumbnail   String
-  casts       CastEpisode[]
   photos      Photo[]
-  url         String
+  src         String
   airedAt     String
   duration    String
   movieId     Int
-  movie       Movie         @relation(fields: [movieId], references: [id])
+  movie       Movie   @relation(fields: [movieId], references: [id])
 
   @@map("episodes")
-}
-
-model CastEpisode {
-  id        Int     @id @default(autoincrement())
-  castId    Int
-  cast      Cast    @relation(fields: [castId], references: [id])
-  episodeId Int
-  episode   Episode @relation(fields: [episodeId], references: [id])
-  role      String
-
-  @@map("cast_episode")
 }
 
 model Photo {
@@ -156,27 +143,7 @@ model Photo {
   src       String
   episodeId Int
   episode   Episode     @relation(fields: [episodeId], references: [id])
-  casts     PhotoCast[]
 
   @@map("photos")
 }
 
-model PhotoCast {
-  id      Int   @id @default(autoincrement())
-  photoId Int
-  photo   Photo @relation(fields: [photoId], references: [id])
-  castId  Int
-  cast    Cast  @relation(fields: [castId], references: [id])
-
-  @@map("photo_cast")
-}
-
-model Video {
-  id      Int    @id @default(autoincrement())
-  name    String
-  src     String
-  movieId Int
-  movie   Movie  @relation(fields: [movieId], references: [id])
-
-  @@map("videos")
-}
