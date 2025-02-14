@@ -92,13 +92,13 @@ model MovieProduction {
 
 model Movie {
   id          Int               @id @default(autoincrement())
-  name        String
+  title       String
   releasedAt  String
   genres      MovieGenre[]
   countries   MovieCountry[]
   casts       MovieCast[]
   productions MovieProduction[]
-  src    String
+  src         String
   watch_links WatchLink[]
   duration    String
   poster      String?
@@ -114,7 +114,7 @@ model Movie {
 model WatchLink {
   id      Int    @id @default(autoincrement())
   server  String
-  href    String
+  link    String
   movieId Int
   movie   Movie  @relation(fields: [movieId], references: [id])
 
@@ -122,28 +122,13 @@ model WatchLink {
 }
 
 model Episode {
-  id          Int     @id @default(autoincrement())
-  number      Int
-  season      Int
-  name        String
-  description String  @db.Text
-  thumbnail   String
-  photos      Photo[]
-  src         String
-  airedAt     String
-  duration    String
-  movieId     Int
-  movie       Movie   @relation(fields: [movieId], references: [id])
+  id      Int    @id @default(autoincrement())
+  season  Int
+  number  Int
+  title   String
+  link    String
+  movieId Int
+  movie   Movie  @relation(fields: [movieId], references: [id])
 
   @@map("episodes")
 }
-
-model Photo {
-  id        Int         @id @default(autoincrement())
-  src       String
-  episodeId Int
-  episode   Episode     @relation(fields: [episodeId], references: [id])
-
-  @@map("photos")
-}
-
