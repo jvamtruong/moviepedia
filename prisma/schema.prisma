@@ -53,8 +53,6 @@ model Cast {
   id       Int         @id @default(autoincrement())
   name     String      @unique
   avatar   String?
-  bio      String
-  src      String
   inMovies MovieCast[]
 
   @@map("casts")
@@ -98,11 +96,10 @@ model Movie {
   countries   MovieCountry[]
   casts       MovieCast[]
   productions MovieProduction[]
-  src         String
+  src         String 
   watch_links WatchLink[]
   duration    String
   poster      String?
-  trailer     String?
   description String            @db.Text
   imdbRating  String?
   seasons     Int?
@@ -114,7 +111,7 @@ model Movie {
 model WatchLink {
   id      Int    @id @default(autoincrement())
   server  String
-  link    String
+  link    String?
   movieId Int
   movie   Movie  @relation(fields: [movieId], references: [id])
 
