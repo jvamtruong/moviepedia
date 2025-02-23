@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
-import { MovieCountry } from './movie_country.entity'
+import { MovieCountry } from './movie-country.entity'
 
 @Entity('countries')
 export class Country {
@@ -9,8 +9,6 @@ export class Country {
   @Column({ unique: true })
   name: string
 
-  @OneToMany(() => MovieCountry, (movieCountry) => movieCountry.country, {
-    cascade: true,
-  })
+  @OneToMany(() => MovieCountry, (movieCountry) => movieCountry.country)
   movies: MovieCountry[]
 }
