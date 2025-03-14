@@ -2,19 +2,14 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { ElasticService } from 'src/elasticsearch/services/elastic/elastic.service'
 import { Cast } from 'src/entities/cast.entity'
-import { Episode } from 'src/entities/episode.entity'
 import { Genre } from 'src/entities/genre.entity'
 import { MovieCast } from 'src/entities/movie-cast.entity'
 import { MovieGenre } from 'src/entities/movie-genre.entity'
 import { Movie } from 'src/entities/movie.entity'
-import { GenresService } from 'src/genres/services/genres/genres.service'
-import { In, QueryRunner, Repository, ManyToOne } from 'typeorm'
-import { CastsService } from '../../../casts/services/casts/casts.service'
+import { In, Repository } from 'typeorm'
 import { DataSource } from 'typeorm'
 import { MovieCountry } from 'src/entities/movie-country.entity'
 import { Country } from 'src/entities/country.entity'
-import { ProductionsService } from 'src/productions/services/productions/productions.service'
-import { CountriesService } from 'src/countries/services/countries/countries.service'
 import { MovieProduction } from 'src/entities/movie-production.entity'
 import { Production } from 'src/entities/production.entity'
 import * as fs from 'fs'
@@ -27,10 +22,6 @@ export class MoviesService {
     @InjectRepository(Movie)
     private readonly movieRepository: Repository<Movie>,
     private readonly dataSource: DataSource,
-    private readonly genresService: GenresService,
-    private readonly castsService: CastsService,
-    private readonly countriesService: CountriesService,
-    private readonly productionsService: ProductionsService,
     private readonly searchService: ElasticService,
   ) {}
 
@@ -41,16 +32,37 @@ export class MoviesService {
     })
   }
 
-  async getSearchResults(query: string): Promise<Movie[]> {
-    const moviesIds = await this.searchService.search(query)
-    return this.movieRepository.find({
+  async getSearchResults(query: string) {
+    const movieIds = await this.searchService.search(query)
+    const top10MovieIds = movieIds.slice(0, 10)
+    const matchingMovies = await this.movieRepository.find({
       where: {
-        id: In(moviesIds),
+        id: In(top10MovieIds),
       },
+      select: ['id', 'title', 'src'],
     })
+
+    if (matchingMovies.length === 0) {
+      throw new HttpException('No matching movies found', HttpStatus.NOT_FOUND)
+    }
+    const movieMapper = new Map<number, Movie>()
+    matchingMovies.forEach((movie) => movieMapper.set(movie.id, movie))
+    const sortedMovies = top10MovieIds.map(movieId => movieMapper.get(movieId))
+
+    // caching the remaining results in redis to show them if necessary
+
+    return {
+      total: sortedMovies.length,
+      results: sortedMovies,
+    }
   }
 
-  async saveMoviesFromRawFiles() {
+  async saveMoviesToElastic(index: string): Promise<void> {
+    const movies = await this.movieRepository.find()
+    await this.searchService.bulkIndexMovies(index, movies)
+  }
+
+  async saveMoviesFromRawFiles(): Promise<void> {
     const filePath =
       'C:\\Users\\jvamt\\Desktop\\moviepedia-backend\\data\\tv_show_final_results.jsonl'
 
@@ -113,7 +125,7 @@ export class MoviesService {
       const productions = await queryRunner.manager.find(Production, {
         select: ['name'],
       })
-  
+
       const existingCastNames = new Set<string>(casts.map((cast) => cast.name))
 
       const nonExistingCasts = nonDuplicatedCasts
