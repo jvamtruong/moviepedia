@@ -1,6 +1,5 @@
 import { Client } from '@elastic/elasticsearch'
 import { Injectable } from '@nestjs/common'
-import { title } from 'process'
 import { Movie } from 'src/entities/movie.entity'
 
 @Injectable()

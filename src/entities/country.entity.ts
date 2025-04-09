@@ -6,7 +6,7 @@ export class Country {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column({ unique: true })
+  @Column()
   name: string
 
   @OneToMany(() => MovieCountry, (movieCountry) => movieCountry.country)

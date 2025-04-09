@@ -5,6 +5,7 @@ import { MovieGenre } from './movie-genre.entity'
 import { Watchlink } from './watchlink.entity'
 import { Episode } from './episode.entity'
 import { MovieProduction } from './movie-production.entity'
+import { Comment } from './comment.entity'
 
 @Entity('movies')
 export class Movie {
@@ -14,7 +15,7 @@ export class Movie {
   @Column()
   title: string
 
-  @Column()
+  @Column({ name: 'released_at' })
   releasedAt: string
 
   @Column()
@@ -29,11 +30,16 @@ export class Movie {
   @Column({ type: 'text' })
   description: string
 
-  @Column()
+  @Column({ name: 'imdb_rating' })
   imdbRating: string
 
-  @Column()
+  @Column({ default: 0 })
   seasons: number
+
+  @OneToMany(() => Comment, (comment) => comment.movie, {
+    cascade: true,
+  })
+  comments: Comment[]
 
   @OneToMany(() => MovieGenre, (movieGenre) => movieGenre.movie, {
     cascade: true,

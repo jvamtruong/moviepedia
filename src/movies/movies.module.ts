@@ -8,6 +8,7 @@ import { GenresModule } from 'src/genres/genres.module'
 import { CastsModule } from 'src/casts/casts.module'
 import { ProductionsModule } from 'src/productions/productions.module'
 import { CountriesModule } from 'src/countries/countries.module'
+import { UsersModule } from 'src/users/users.module'
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { CountriesModule } from 'src/countries/countries.module'
     CastsModule,
     ProductionsModule,
     CountriesModule,
+    UsersModule
   ],
   providers: [MoviesService],
   controllers: [MoviesController],

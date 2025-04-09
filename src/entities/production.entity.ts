@@ -6,7 +6,7 @@ export class Production {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column({ unique: true })
+  @Column()
   name: string
 
   @OneToMany(

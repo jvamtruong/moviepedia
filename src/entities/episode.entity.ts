@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 import { Movie } from './movie.entity'
 
 @Entity('episodes')
@@ -19,5 +19,6 @@ export class Episode {
   link: string
 
   @ManyToOne(() => Movie, (movie) => movie.episodes, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'movie_id' })
   movie: Movie
 }

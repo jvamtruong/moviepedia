@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { ElasticService } from 'src/elasticsearch/services/elastic/elastic.service'
 import { Cast } from 'src/entities/cast.entity'
@@ -14,21 +14,26 @@ import { MovieProduction } from 'src/entities/movie-production.entity'
 import { Production } from 'src/entities/production.entity'
 import * as fs from 'fs'
 import * as readline from 'readline'
-import { RawMovieDto } from 'src/movies/dtos/raw-movie.dto'
+import { RawMovieDto } from 'src/movies/dto/raw-movie.dto'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { Cache } from 'cache-manager'    
 
 @Injectable()
 export class MoviesService {
   constructor(
     @InjectRepository(Movie)
     private readonly movieRepository: Repository<Movie>,
+    @Inject(CACHE_MANAGER)
+    private cacheManager: Cache,
     private readonly dataSource: DataSource,
     private readonly searchService: ElasticService,
   ) {}
 
-  async getMovies(page: number): Promise<Movie[]> {
+  async getMoviesByPage(page: number): Promise<Movie[]> {
     return this.movieRepository.find({
       skip: (page - 1) * 32,
       take: 32,
+      relations: ['casts', 'casts.cast'],
     })
   }
 
@@ -47,7 +52,9 @@ export class MoviesService {
     }
     const movieMapper = new Map<number, Movie>()
     matchingMovies.forEach((movie) => movieMapper.set(movie.id, movie))
-    const sortedMovies = top10MovieIds.map(movieId => movieMapper.get(movieId))
+    const sortedMovies = top10MovieIds.map((movieId) =>
+      movieMapper.get(movieId),
+    )
 
     // caching the remaining results in redis to show them if necessary
 

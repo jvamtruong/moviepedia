@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
+import { Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 import { Country } from './country.entity'
 import { Movie } from './movie.entity'
 
@@ -8,8 +8,10 @@ export class MovieCountry {
   id: number
 
   @ManyToOne(() => Movie, (movie) => movie.countries)
+  @JoinColumn({ name: 'movie_id' })
   movie: Movie
 
   @ManyToOne(() => Country, (country) => country.movies)
+  @JoinColumn({ name: 'country_id' })
   country: Country
 }
