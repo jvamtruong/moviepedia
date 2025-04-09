@@ -1,20 +1,16 @@
-import { Client } from '@elastic/elasticsearch'
 import { Injectable } from '@nestjs/common'
+import { ElasticsearchService } from '@nestjs/elasticsearch'
 import { Movie } from 'src/entities/movie.entity'
 
 @Injectable()
-export class ElasticService {
-  private readonly client: Client
-
-  constructor() {
-    this.client = new Client({ node: 'http://localhost:9200' })
-  }
+export class SearchService {
+  constructor(private readonly elasticsearchService: ElasticsearchService) {}
 
   async indexMovie(movie: Movie): Promise<void> {
-    if (!this.client.indices.exists({ index: 'movies_v2' })) {
+    if (!this.elasticsearchService.indices.exists({ index: 'movies_v2' })) {
       await this.createIndex('movies_v2')
     }
-    await this.client.index({
+    await this.elasticsearchService.index({
       index: 'movies_v2',
       id: movie.id.toString(),
       body: {
@@ -24,7 +20,7 @@ export class ElasticService {
   }
 
   async search(query: string): Promise<number[]> {
-    const response = await this.client.search({
+    const response = await this.elasticsearchService.search({
       index: 'movies_v2',
       body: {
         query: {
@@ -60,7 +56,7 @@ export class ElasticService {
   }
 
   async bulkIndexMovies(index: string, movies: Movie[]): Promise<void> {
-    if (!this.client.indices.exists({ index })) {
+    if (!this.elasticsearchService.indices.exists({ index })) {
       await this.createIndex(index)
     }
     const body = movies.flatMap((movie) => [
@@ -69,14 +65,14 @@ export class ElasticService {
         title: movie.title,
       },
     ])
-    const result = await this.client.bulk({ refresh: true, body })
+    const result = await this.elasticsearchService.bulk({ refresh: true, body })
     if (result.errors) {
       throw new Error('errors in bulkIndexMovies')
     }
   }
 
   private async createIndex(index: string): Promise<void> {
-    await this.client.indices.create({
+    await this.elasticsearchService.indices.create({
       index,
       mappings: {
         properties: {

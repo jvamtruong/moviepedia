@@ -30,5 +30,11 @@ export const errorMessages = {
       message: 'user not found',
       code: '70001',
     },
+  },
+  movies: {
+    movieNotFound: {
+      message: 'movie not found',
+      code: '80001',
+    },
   }
 }

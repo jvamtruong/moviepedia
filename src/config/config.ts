@@ -17,8 +17,10 @@ export default () => ({
     port: parseInt(process.env.REDIS_PORT as string),
     url: process.env.REDIS_URL,
   },
+  elasticsearch: {
+    node: process.env.ELASTICSEARCH_NODE,
+  },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET,
-    refreshSecret: process.env.JWT_REFRESH_SECRET,
   },
 })

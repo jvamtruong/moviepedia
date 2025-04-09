@@ -24,7 +24,12 @@ export class MoviesController {
   }
 
   @Get('search')
-  getSearchResults(@Query('q') q: string) {
-    return this.moviesService.getSearchResults(q)
+  getTopSearchResults(@Query('q') q: string) {
+    return this.moviesService.getTopSearchResults(q)
+  }
+
+  @Get('search-all')
+  getAllSearchResults(@Query('q') q: string) {
+    return this.moviesService.getAllSearchResults(q)
   }
 }

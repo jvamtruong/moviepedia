@@ -1,6 +1,5 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { ElasticService } from 'src/elasticsearch/services/elastic/elastic.service'
 import { Cast } from 'src/entities/cast.entity'
 import { Genre } from 'src/entities/genre.entity'
 import { MovieCast } from 'src/entities/movie-cast.entity'
@@ -16,7 +15,9 @@ import * as fs from 'fs'
 import * as readline from 'readline'
 import { RawMovieDto } from 'src/movies/dto/raw-movie.dto'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import { Cache } from 'cache-manager'    
+import { Cache } from 'cache-manager'
+import { SearchService } from 'src/search/services/search/search.service'
+import { errorMessages } from 'src/exception-filters/custom'
 
 @Injectable()
 export class MoviesService {
@@ -26,7 +27,7 @@ export class MoviesService {
     @Inject(CACHE_MANAGER)
     private cacheManager: Cache,
     private readonly dataSource: DataSource,
-    private readonly searchService: ElasticService,
+    private readonly searchService: SearchService,
   ) {}
 
   async getMoviesByPage(page: number): Promise<Movie[]> {
@@ -37,7 +38,7 @@ export class MoviesService {
     })
   }
 
-  async getSearchResults(query: string) {
+  async getTopSearchResults(query: string) {
     const movieIds = await this.searchService.search(query)
     const top10MovieIds = movieIds.slice(0, 10)
     const matchingMovies = await this.movieRepository.find({
@@ -48,7 +49,7 @@ export class MoviesService {
     })
 
     if (matchingMovies.length === 0) {
-      throw new HttpException('No matching movies found', HttpStatus.NOT_FOUND)
+      throw new NotFoundException(errorMessages.movies.movieNotFound)
     }
     const movieMapper = new Map<number, Movie>()
     matchingMovies.forEach((movie) => movieMapper.set(movie.id, movie))
@@ -56,12 +57,49 @@ export class MoviesService {
       movieMapper.get(movieId),
     )
 
-    // caching the remaining results in redis to show them if necessary
+    await this.cacheManager.set(`search_results:${query}`, movieIds, 60_000)
 
     return {
       total: sortedMovies.length,
       results: sortedMovies,
     }
+  }
+
+  async getAllSearchResults(query: string) {
+    const cachedResults = await this.cacheManager.get<number[]>(
+      `search_results:${query}`,
+    )
+    if (cachedResults) {
+      const matchingMovies = await this.movieRepository.find({
+        where: {
+          id: In(cachedResults),
+        },
+        select: ['id', 'title', 'src'],
+      })
+      if (matchingMovies.length === 0) {
+        throw new NotFoundException(errorMessages.movies.movieNotFound)
+      }
+      const movieMapper = new Map<number, Movie>()
+      matchingMovies.forEach((movie) => movieMapper.set(movie.id, movie))
+      const sortedMovies = cachedResults.map((movieId) =>
+        movieMapper.get(movieId),
+      )
+      return sortedMovies
+    }
+    const movieIds = await this.searchService.search(query)
+    const matchingMovies = await this.movieRepository.find({
+      where: {
+        id: In(movieIds),
+      },
+      select: ['id', 'title', 'src'],
+    })
+    if (matchingMovies.length === 0) {
+      throw new NotFoundException(errorMessages.movies.movieNotFound)
+    }
+    const movieMapper = new Map<number, Movie>()
+    matchingMovies.forEach((movie) => movieMapper.set(movie.id, movie))
+    const sortedMovies = movieIds.map((movieId) => movieMapper.get(movieId))
+    return sortedMovies
   }
 
   async saveMoviesToElastic(index: string): Promise<void> {
