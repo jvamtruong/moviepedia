@@ -34,28 +34,36 @@ export class MoviesService {
     return this.movieRepository.find({
       skip: (page - 1) * 32,
       take: 32,
-      relations: ['casts', 'casts.cast'],
+      relations: ['genres', 'genres.genre'],
     })
   }
 
   async getTopSearchResults(query: string) {
     const movieIds = await this.searchService.search(query)
-    const top10MovieIds = movieIds.slice(0, 10)
+    const top5MovieIds = movieIds.slice(0, 5)
     const matchingMovies = await this.movieRepository.find({
       where: {
-        id: In(top10MovieIds),
+        id: In(top5MovieIds),
       },
-      select: ['id', 'title', 'src'],
+      select: [
+        'id',
+        'title',
+        'src',
+        'poster',
+        'releasedAt',
+        'imdbRating',
+        'duration'
+      ],
     })
 
     if (matchingMovies.length === 0) {
       throw new NotFoundException(errorMessages.movies.movieNotFound)
     }
     const movieMapper = new Map<number, Movie>()
-    matchingMovies.forEach((movie) => movieMapper.set(movie.id, movie))
-    const sortedMovies = top10MovieIds.map((movieId) =>
-      movieMapper.get(movieId),
-    )
+    for (const matchingMovie of matchingMovies) {
+      movieMapper.set(matchingMovie.id, matchingMovie)
+    }
+    const sortedMovies = top5MovieIds.map((movieId) => movieMapper.get(movieId))
 
     await this.cacheManager.set(`search_results:${query}`, movieIds, 60_000)
 
@@ -74,13 +82,23 @@ export class MoviesService {
         where: {
           id: In(cachedResults),
         },
-        select: ['id', 'title', 'src'],
+        select: [
+          'id',
+          'title',
+          'src',
+          'poster',
+          'releasedAt',
+          'imdbRating',
+          'duration',
+        ],
       })
       if (matchingMovies.length === 0) {
         throw new NotFoundException(errorMessages.movies.movieNotFound)
       }
       const movieMapper = new Map<number, Movie>()
-      matchingMovies.forEach((movie) => movieMapper.set(movie.id, movie))
+      for (const matchingMovie of matchingMovies) {
+        movieMapper.set(matchingMovie.id, matchingMovie)
+      }
       const sortedMovies = cachedResults.map((movieId) =>
         movieMapper.get(movieId),
       )
@@ -91,13 +109,24 @@ export class MoviesService {
       where: {
         id: In(movieIds),
       },
-      select: ['id', 'title', 'src'],
+      select: [
+        'id',
+        'title',
+        'src',
+        'poster',
+        'releasedAt',
+        'imdbRating',
+        'duration',
+        'description'
+      ],
     })
     if (matchingMovies.length === 0) {
       throw new NotFoundException(errorMessages.movies.movieNotFound)
     }
     const movieMapper = new Map<number, Movie>()
-    matchingMovies.forEach((movie) => movieMapper.set(movie.id, movie))
+    for (const matchingMovie of matchingMovies) {
+      movieMapper.set(matchingMovie.id, matchingMovie)
+    }
     const sortedMovies = movieIds.map((movieId) => movieMapper.get(movieId))
     return sortedMovies
   }
