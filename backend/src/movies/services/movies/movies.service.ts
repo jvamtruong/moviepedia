@@ -34,7 +34,6 @@ export class MoviesService {
     return this.movieRepository.find({
       skip: (page - 1) * 32,
       take: 32,
-      relations: ['genres', 'genres.genre'],
     })
   }
 

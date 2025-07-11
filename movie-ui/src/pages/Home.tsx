@@ -18,12 +18,12 @@ export default function Home() {
   const { data: topResults, isLoading: isSearching } = useSuggestions(searchQuery)
   const { data: allResults, isLoading: isAllResultsLoading } = useSearchResults(selectedMovie?.title as string)
 
-  console.log('allResults', allResults)
+  // console.log('allResults', allResults)
 
   useEffect(() => {
     // Reset to first page when search query changes
     setCurrentPage(1)
-  }, [searchQuery])
+  }, [searchQuery, selectedMovie])
 
   if (isMoviesLoading) {
     return (
@@ -51,7 +51,7 @@ export default function Home() {
 
     if (selectedMovie) {
       setSelectedMovie(selectedMovie)
-      queryClient.setQueryData(['suggestions', query], [selectedMovie])
+      setCurrentPage(1)
       queryClient.invalidateQueries({
         queryKey: ['all-results', (selectedMovie as Movie)?.title],
       })

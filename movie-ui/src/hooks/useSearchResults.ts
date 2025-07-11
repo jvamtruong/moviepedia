@@ -4,10 +4,16 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 
 const getAllSearchResults = async (query: string) => {
-  const response = await axios.get<Movie[]>(
-    `${BASE_URL_DEV}/movies/search-all?q=${query}`
-  )
-  return response.data
+  try {
+    const response = await axios.get<Movie[]>(
+      `${BASE_URL_DEV}/movies/search-all?q=${query}`
+    )
+    return response.data
+  } catch (error) {
+    console.error('Error fetching search results:', error)
+    return []
+  }
+
 }
 
 export const useSearchResults = (query: string) => {
