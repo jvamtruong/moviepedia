@@ -1,4 +1,4 @@
-FROM node:22.12.0-alpine3.19
+FROM node:18-alpine3.19 AS builder
 
 WORKDIR /app
 
@@ -7,6 +7,13 @@ RUN npm install
 COPY . .
 RUN npm run build
 
+FROM node:18-alpine3.19
+
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+
 EXPOSE 5000
 
-CMD [ "npm", "run", "start" ]
+CMD ["node",  "dist/main.js"]
