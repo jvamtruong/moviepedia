@@ -1,0 +1,19 @@
+{
+  "movies_v2": {
+    "mappings": {
+      "properties": {
+        "title": {
+          "type": "search_as_you_type",
+          "doc_values": false,
+          "max_shingle_size": 3,
+          "analyzer": {
+            "folding_analyzer": {
+              "tokenizer": "standard",
+              "filter": ["lowercase", "asciifolding"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

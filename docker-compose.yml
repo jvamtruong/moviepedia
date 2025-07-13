@@ -1,0 +1,81 @@
+name: moviepedia
+
+services:
+  backend:
+    build: ./backend
+    container_name: node-server
+    ports:
+      - 5000:5000
+    env_file:
+      - ./backend/.env
+    networks:
+      - app_network
+    depends_on:
+      - mysql
+      - redis
+
+  mysql:
+    image: mysql:8.4.3
+    container_name: mysql
+    restart: always
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      # MYSQL_ROOT_HOST: '%' # Allow root access from any host
+      # MYSQL_DEFAULT_AUTHENTICATION_PLUGIN: mysql_native_password
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/data/moviepedia.sql:/docker-entrypoint-initdb.d/init.sql # Mount the SQL file
+
+    networks:
+      - app_network
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+      - xpack.security.enabled=false
+    ports:
+      - '9200:9200' # Expose Elasticsearch API port
+      - '9300:9300' # Expose inter-node communication port
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+      - ./backend/data/elasticsearch/init:/usr/share/elasticsearch/init
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q 'green\\|yellow'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    command: > 
+      bash -c "
+        /usr/local/bin/docker-entrypoint.sh &
+        /usr/share/elasticsearch/init/init.sh
+        wait 
+      "
+    networks:
+      - app_network
+
+volumes:
+  mysql_data:
+  redis_data:
+  es_data:
+
+networks:
+  app_network:
+    driver: bridge
+
+# docker run -d --name mysql -p 3307:3306 -e MYSQL_ROOT_PASSWORD=123456 -v mysql_data:/var/lib/mysql mysql:latest
