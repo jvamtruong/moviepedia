@@ -97,7 +97,7 @@ export default function Pagination({
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => onPageChange(page)}
+                onClick={() => onPageChange(page as number)}
                 className={`
                   px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200
                   ${

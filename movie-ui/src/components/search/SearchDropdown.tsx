@@ -15,8 +15,8 @@ export default function SearchDropdown({ onSearch, suggestions, isLoading, searc
   const [query, setQuery] = useState(searchQuery || '')
   const [isOpen, setIsOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
-  const inputRef = useRef(null)
-  const dropdownRef = useRef(null)
+  const inputRef = useRef<any>(null)
+  const dropdownRef = useRef<any>(null)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

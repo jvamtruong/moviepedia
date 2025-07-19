@@ -2,7 +2,7 @@ name: moviepedia
 
 services:
   backend:
-    image: jvamtruong/moviepedia-backend:latest
+    image: jvamtruong/moviepedia-backend:1.0
     container_name: node-server
     ports:
       - 5000:5000
@@ -21,7 +21,7 @@ services:
     container_name: mysql
     restart: always
     ports:
-      - 3307:3306
+      - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: 123456
       # MYSQL_ROOT_HOST: '%' # Allow root access from any host
@@ -72,6 +72,17 @@ services:
         /usr/share/elasticsearch/init/init.sh
         wait 
       "
+    networks:
+      - app_network
+  
+  frontend:
+    image: jvamtruong/moviepedia-ui:1.0
+    container_name: movie-ui
+    ports:
+      - 80:80
+    restart: always
+    depends_on:
+      - backend
     networks:
       - app_network
 
